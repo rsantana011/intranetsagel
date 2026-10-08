@@ -79,6 +79,41 @@ class FrotaTest(unittest.TestCase):
     def saldo(self):
         return self.row("SELECT COALESCE(SUM(CASE tipo WHEN 'Entrada' THEN quantidade_ml ELSE -quantidade_ml END),0) s FROM combustivel_movimentos WHERE cancelado=0")['s']
 
+    def test_situacao_confirmacao_historico_e_reenvio(self):
+        ident = self.cadastrar()
+        self.entrada()
+        self.abastecer(ident)
+        path = f'/frota/veiculos/{ident}/situacao'
+        page = self.client.get(path)
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('Confirmar inativação', page.text)
+        self.assertEqual(self.row('SELECT ativo FROM frota_veiculos WHERE id=?', (ident,))[0], 1)
+        self.post(path, {'ativo': '0', 'anterior': '1'})
+        self.assertEqual(self.row('SELECT ativo FROM frota_veiculos WHERE id=?', (ident,))[0], 1)
+        self.post(path, {'ativo': '0', 'anterior': '1', 'confirmar': '1'})
+        self.assertEqual(self.row('SELECT ativo FROM frota_veiculos WHERE id=?', (ident,))[0], 0)
+        self.assertEqual(self.row('SELECT COUNT(*) FROM combustivel_movimentos')[0], 2)
+        self.assertNotIn(f'href="/frota/veiculos/{ident}"', self.client.get('/frota').text)
+        self.assertIn(f'href="/frota/veiculos/{ident}"', self.client.get('/frota?situacao=inativos').text)
+        self.post(path, {'ativo': '0', 'anterior': '1', 'confirmar': '1'})
+        self.assertEqual(self.row("SELECT COUNT(*) FROM auditoria WHERE acao='Inativar veículo'")[0], 1)
+        self.post(path, {'ativo': '1', 'anterior': '0', 'confirmar': '1'})
+        self.assertEqual(self.row('SELECT ativo FROM frota_veiculos WHERE id=?', (ident,))[0], 1)
+
+    def test_situacao_bloqueia_uso_csrf_e_sem_permissao(self):
+        ident = self.cadastrar()
+        path = f'/frota/veiculos/{ident}/situacao'
+        self.post(f'/frota/veiculos/{ident}/utilizacoes',
+                  {'motorista': 'Teste', 'destino': 'Teste', 'saida': self.dia, 'km_saida': '100'})
+        self.assertNotIn('Confirmar inativação', self.client.get(path).text)
+        self.post(path, {'ativo': '0', 'anterior': '1', 'confirmar': '1'})
+        self.assertEqual(self.row('SELECT ativo FROM frota_veiculos WHERE id=?', (ident,))[0], 1)
+        self.assertEqual(self.client.post(path, data={'ativo': '0'}).status_code, 400)
+        self.assertEqual(self.client.get('/frota/veiculos/999999/situacao').status_code, 404)
+        self.autenticar(self.client, 2)
+        self.assertEqual(self.client.get(path).status_code, 403)
+        self.assertEqual(self.post(path, {'ativo': '0', 'anterior': '1', 'confirmar': '1'}).status_code, 403)
+
     def test_cadastro_busca_edicao_sem_apagar_historico(self):
         veiculo = self.cadastrar()
         self.assertEqual(self.client.get('/frota?q=ABC').status_code, 200)

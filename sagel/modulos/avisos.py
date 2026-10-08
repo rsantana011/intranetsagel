@@ -1,4 +1,11 @@
 """Rotas e regras da área: avisos."""
+
+# ============================================================
+# AVISOS INTERNOS
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 from flask import abort, flash, redirect, request
 from ..base import agora, auditar, current_user, db, permissao, render_page, tem_permissao, texto_form

@@ -1,4 +1,11 @@
 """Rotas e regras da área: compras."""
+
+# ============================================================
+# COMPRAS: SOLICITAÇÕES, COTAÇÕES, FORNECEDORES E APROVAÇÕES
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import re

@@ -1,0 +1,26 @@
+<div class="box">
+  <h2>{{ 'Inativar' if v.ativo else 'Reativar' }} {{ v.placa }}</h2>
+  <p><strong>{{ v.modelo }}</strong> · {{ v.ano }}</p>
+  {% if v.ativo %}
+  <p>O veículo sairá da lista de ativos e ficará indisponível para novas saídas, manutenções e abastecimentos. O cadastro, os documentos e todo o histórico serão preservados.</p>
+  <p>Você poderá encontrá-lo pelo filtro <strong>Inativos</strong> e reativá-lo quando precisar.</p>
+  {% if pendentes %}<p role="status">Este veículo tem {{ pendentes }} manutenção(ões) pendente(s). Elas continuarão registradas; a inativação não cancela serviços.</p>{% endif %}
+  {% else %}
+  <p>O veículo voltará à lista de ativos e poderá receber novas operações. Seu histórico será mantido.</p>
+  {% endif %}
+  {% if v.ativo and em_uso %}
+  <p role="alert"><strong>Veículo em uso.</strong> Registre o retorno antes de inativá-lo.</p>
+  <a class="button secondary" href="{{ url_for('frota.veiculo', veiculo_id=v.id) }}">Voltar ao veículo</a>
+  {% else %}
+  <form method="post">
+    {{ csrf_field() }}
+    <input type="hidden" name="ativo" value="{{ 0 if v.ativo else 1 }}">
+    <input type="hidden" name="anterior" value="{{ v.ativo }}">
+    <label><input type="checkbox" name="confirmar" value="1" required> Confirmo que desejo {{ 'inativar' if v.ativo else 'reativar' }} o veículo {{ v.placa }}.</label>
+    <div class="acoes">
+      <button>{{ 'Confirmar inativação' if v.ativo else 'Confirmar reativação' }}</button>
+      <a class="button secondary" href="{{ url_for('frota.veiculo', veiculo_id=v.id) }}">Cancelar</a>
+    </div>
+  </form>
+  {% endif %}
+</div>

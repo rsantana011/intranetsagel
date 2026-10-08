@@ -1,5 +1,11 @@
 
 <p><a class="button secondary" href="{{ url_for('frota.index') }}">Voltar para frota</a></p>
+{% if tem_permissao('frota','gerenciar') %}
+<div class="box">
+  <a class="button secondary" href="{{ url_for('frota.situacao_veiculo',veiculo_id=v.id) }}">{{ 'Inativar veículo' if v.ativo else 'Reativar veículo' }}</a>
+  <p class="muted">A inativação retira o veículo da lista de ativos e preserva todo o histórico.</p>
+</div>
+{% endif %}
 <div class="cards"><div class="card"><span>Quilometragem atual</span><strong>{{ v.quilometragem }} km</strong></div><div class="card"><span>Combustível</span><strong>{{ v.tipo_combustivel }}</strong></div><div class="card"><span>Situação cadastral</span><strong>{{ 'Ativo' if v.ativo else 'Inativo' }}</strong></div></div>
 {% if tem_permissao('frota','gerenciar') %}<div class="box"><details><summary>Editar cadastro do veículo</summary><form method="post" class="grid-form">{{ csrf_field() }}
 <div class="campo"><label>Placa<input name="placa" value="{{ v.placa }}" maxlength="10" required></label></div><div class="campo"><label>Modelo<input name="modelo" value="{{ v.modelo }}" maxlength="120" required></label></div>

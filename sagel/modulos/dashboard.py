@@ -1,4 +1,11 @@
 """Rotas e regras da área: dashboard."""
+
+# ============================================================
+# PÁGINA INICIAL E INDICADORES
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 from flask import current_app
 from ..base import current_user, db, permissao, render_page, tem_permissao

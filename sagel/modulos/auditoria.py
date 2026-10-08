@@ -1,4 +1,11 @@
 """Rotas e regras da área: auditoria."""
+
+# ============================================================
+# AUDITORIA E HISTÓRICO DE AÇÕES
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 from datetime import date, timedelta
 from flask import abort, request

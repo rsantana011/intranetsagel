@@ -1,4 +1,11 @@
 """Rotas e regras da área: documentacao."""
+
+# ============================================================
+# DOCUMENTAÇÃO: ARQUIVOS, VERSÕES E PERMISSÕES
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 from datetime import date, timedelta
 from urllib.parse import urlsplit

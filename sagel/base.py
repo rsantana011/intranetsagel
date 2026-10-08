@@ -41,6 +41,9 @@ def agora():
 def hoje():
     return agora()[:10]
 
+# ============================================================
+# BANCO DE DADOS — configuração PostgreSQL e conexões
+# ============================================================
 def parametros_postgres():
     params = {key: os.getenv('POSTGRES_' + env) for key, env in (
         ('host', 'HOST'), ('port', 'PORT'), ('dbname', 'DB'),
@@ -71,6 +74,9 @@ def fechar_db(error=None):
     if conn is not None:
         conn.close()
 
+# ============================================================
+# LOGIN E SEGURANÇA — senhas, sessão e identificação do usuário
+# ============================================================
 def hash_senha(senha):
     if len(senha.encode('utf-8')) > 72:
         raise ValueError('A senha excede o tamanho permitido.')
@@ -117,6 +123,9 @@ def emitir_acesso(response, user):
                         secure=current_app.config['SESSION_COOKIE_SECURE'], samesite='Lax')
     return response
 
+# ============================================================
+# PERMISSÕES — controle de acesso por módulo e ação
+# ============================================================
 def tem_permissao(modulo, acao='ver'):
     user = current_user()
     if not user:
@@ -148,6 +157,9 @@ def autenticado(func):
         return func(*args, **kwargs)
     return check
 
+# ============================================================
+# FORMULÁRIOS — proteção CSRF
+# ============================================================
 def csrf_field():
     token = session.setdefault('csrf_token', secrets.token_urlsafe(32))
     return Markup('<input type="hidden" name="csrf_token" value="{}">').format(escape(token))
@@ -159,6 +171,9 @@ def proteger_post():
         if not expected or not secrets.compare_digest(expected.encode(), actual.encode()):
             abort(400, description='A sessão do formulário expirou. Reabra a página e tente novamente.')
 
+# ============================================================
+# AUDITORIA — registro de ações
+# ============================================================
 def auditar(modulo, acao, registro_id=None, detalhes='', conn=None):
     conn = conn or db()
     user = current_user()
@@ -166,6 +181,9 @@ def auditar(modulo, acao, registro_id=None, detalhes='', conn=None):
                  (user['id'] if user else None, modulo, acao, str(registro_id) if registro_id is not None else None,
                   str(detalhes)[:2000], agora()))
 
+# ============================================================
+# INTERFACE — renderização compartilhada
+# ============================================================
 def render_page(titulo, corpo, **ctx):
     ctx.setdefault('titulo', titulo)
     conteudo = render_template_string(corpo, **ctx)
@@ -209,6 +227,9 @@ def baixar_anexo(chave, nome):
     return send_from_directory(current_app.config['STORAGE_DIR'], chave, as_attachment=True,
                                download_name=nome, mimetype='application/octet-stream')
 
+# ============================================================
+# BANCO DE DADOS — cópias de segurança
+# ============================================================
 def backup_banco():
     folder = Path(current_app.config['BACKUP_DIR'])
     folder.mkdir(parents=True, exist_ok=True)
@@ -255,6 +276,9 @@ def backup_banco():
         source.close()
     return target.name
 
+# ============================================================
+# BANCO DE DADOS — criação e atualização das tabelas comuns
+# ============================================================
 def init_schema(conn):
     conn.executescript('''
     CREATE TABLE IF NOT EXISTS usuarios(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT NOT NULL,

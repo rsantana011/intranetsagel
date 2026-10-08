@@ -36,6 +36,9 @@ def _digest(value):
 def _aberto():
     return db().execute("SELECT valor FROM configuracoes WHERE chave='cadastro_aberto'").fetchone()['valor'] == '1'
 
+# ============================================================
+# CADASTRO E E-MAIL — envio do código de confirmação
+# ============================================================
 def enviar_codigo(email, codigo):
     smtp = current_app.config.get('SAGEL_SMTP', {})
     if not smtp.get('host') or not smtp.get('remetente'):

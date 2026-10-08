@@ -1,4 +1,11 @@
 """Rotas e regras da área: estoque_ti."""
+
+# ============================================================
+# ESTOQUE E ALOCAÇÃO DE EQUIPAMENTOS DE TI
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 import sqlite3
 from flask import abort, flash, redirect, request, url_for

@@ -280,3 +280,12 @@ details:not(.menu details) {margin:14px 0} summary {font-weight:600;cursor:point
 @media(max-width:800px){.grid-form{grid-template-columns:1fr;gap:6px}.identidade{text-align:center}.menu{justify-content:center}.menu form{margin-left:0}.submenu{right:0}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.card h2{font-size:28px}.box{padding:18px}.filtros{align-items:stretch}.filtros button{align-self:end}.atalhos{grid-template-columns:1fr 1fr}.topbar-conteudo{padding:18px 16px}.conteudo{padding:24px 16px}}
 @media(max-width:400px){.atalhos{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.card{padding:15px}}
 .senha-controle, .login .senha-controle {width:auto;display:block;padding:5px 10px;margin:-10px 0 18px;font-size:12px}.senha-regras {list-style:none;margin:4px 0 12px;padding:0;font-size:12px;color:#647067}.senha-regras li {padding:3px 0}.senha-regras [data-ok="true"],.senha-resultado[data-ok="true"] {color:#00663b;font-weight:600}.senha-resultado {font-size:13px;margin:0 0 18px}.senha-regras + .senha-resultado + .campo-ajuda {margin-top:0}
+
+/* NAVEGAÇÃO E ACESSIBILIDADE — estilos compartilhados por todas as áreas. */
+.pular-conteudo{position:fixed;top:8px;left:8px;transform:translateY(-180%);z-index:1000;background:#fff;color:#075b37;padding:12px 18px;border:2px solid #075b37;border-radius:8px}
+.pular-conteudo:focus{transform:translateY(0)}
+:focus-visible{outline:3px solid #b67d00;outline-offset:3px}
+.caminho-pagina{margin:0 0 16px;font-size:.9rem}
+.formulario-status{margin:10px 0;font-size:.9rem;color:#075b37}
+form[aria-busy="true"] button[type="submit"],form[aria-busy="true"] button:not([type]){opacity:.7;cursor:progress}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

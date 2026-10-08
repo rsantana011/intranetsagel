@@ -89,3 +89,11 @@ migrarpostgres.py    Ferramenta de migração SQLite → PostgreSQL
 `.env`, ambientes virtuais, caches, configurações da IDE, bancos SQLite, arquivos de instância, anexos e backups são ignorados pelo Git. Arquivos ignorados não são apagados da máquina. Antes de enviar novas alterações, revise os arquivos que serão incluídos.
 
 Faça backup do banco e também dos anexos e da chave da aplicação. A migração exige planejamento e cópias verificadas; consulte `python migrarpostgres.py --help` antes de utilizar a ferramenta. Nenhuma migração é necessária para consultar este repositório.
+
+## Organização para manutenção e experiência de uso
+
+Consulte [o mapa do código](ESTRUTURA-DO-PROJETO.md) para localizar banco de dados, login, frota e todas as outras áreas. `INTRA.py` contém um índice rápido; os módulos e as funções compartilhadas possuem comentários de seção. As rotas continuam separadas dos templates.
+
+A interface inclui navegação de retorno ao início, atalho para pular ao conteúdo, foco visível pelo teclado e respeito à preferência por movimento reduzido. Formulários apresentam indicação de envio, bloqueiam cliques repetidos por até 15 segundos e verificam o limite total de anexos de 16 MB no navegador. As validações do servidor permanecem obrigatórias; o bloqueio no navegador não substitui idempotência no servidor.
+
+Na Frota, a ação Inativar/Reativar tem uma página de confirmação com identificação do veículo, explicação do efeito e aviso de manutenções pendentes. O histórico é preservado, veículos em uso não podem ser inativados e mudanças concorrentes de situação são recusadas.

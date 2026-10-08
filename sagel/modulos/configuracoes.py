@@ -1,4 +1,11 @@
 """Rotas e regras da área: configuracoes."""
+
+# ============================================================
+# CONFIGURAÇÕES E BACKUPS
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 from flask import flash, redirect, request
 from ..base import auditar, backup_banco, db, permissao, render_page

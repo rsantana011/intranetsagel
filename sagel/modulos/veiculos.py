@@ -1,4 +1,11 @@
 """Rotas e regras da área: veiculos."""
+
+# ============================================================
+# FROTA: VEÍCULOS, UTILIZAÇÃO, MANUTENÇÃO E DOCUMENTOS
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 import re
 import sqlite3
@@ -121,6 +128,40 @@ def veiculo(veiculo_id):
     pode_combustivel = tem_permissao('combustivel')
     abastecimentos = conn.execute(CONSUMO_SQL + ' WHERE m.veiculo_id=? ORDER BY m.id DESC LIMIT 30', (veiculo_id,)).fetchall() if pode_combustivel else []
     return render_page(item['placa'] + ' · ' + item['modelo'], VEICULO_HTML, v=item, manutencoes=manutencoes, historico=historico, documentos=documentos, usos=usos, abastecimentos=abastecimentos, tipos=COMBUSTIVEIS, datahoje=hoje(), moeda=_moeda, litros=_litros, anoatual=int(hoje()[:4]), pode_combustivel=pode_combustivel)
+
+@bp.route('/frota/veiculos/<int:veiculo_id>/situacao', methods=['GET', 'POST'])
+@permissao('frota', 'gerenciar')
+def situacao_veiculo(veiculo_id):
+    conn = db()
+    item = _veiculo(conn, veiculo_id)
+    if request.method == 'POST':
+        try:
+            if request.form.get('confirmar') != '1':
+                raise ValueError('Confirme a alteração da situação do veículo.')
+            alvo = request.form.get('ativo')
+            anterior = request.form.get('anterior')
+            if alvo not in ('0', '1') or anterior not in ('0', '1') or alvo == anterior:
+                raise ValueError('Situação inválida. Reabra a confirmação do veículo.')
+            conn.execute('BEGIN IMMEDIATE')
+            item = _veiculo(conn, veiculo_id)
+            if item['ativo'] != int(anterior):
+                raise ValueError('A situação deste veículo já foi alterada. Confira o cadastro atualizado.')
+            em_uso = conn.execute("SELECT 1 FROM frota_utilizacoes WHERE veiculo_id=? AND status='Em uso'", (veiculo_id,)).fetchone()
+            if alvo == '0' and em_uso:
+                raise ValueError('Encerre a utilização aberta antes de inativar o veículo.')
+            conn.execute('UPDATE frota_veiculos SET ativo=? WHERE id=?', (int(alvo), veiculo_id))
+            acao = 'Reativar veículo' if alvo == '1' else 'Inativar veículo'
+            auditar('frota', acao, veiculo_id, item['placa'], conn=conn)
+            conn.commit()
+            flash('Veículo reativado.' if alvo == '1' else 'Veículo inativado. O histórico foi preservado.', 'sucesso')
+        except ValueError as exc:
+            return _erro(conn, exc, 'frota.veiculo', veiculo_id=veiculo_id)
+        return redirect(url_for('frota.veiculo', veiculo_id=veiculo_id))
+    em_uso = bool(conn.execute("SELECT 1 FROM frota_utilizacoes WHERE veiculo_id=? AND status='Em uso'", (veiculo_id,)).fetchone())
+    pendentes = conn.execute("SELECT COUNT(*) AS total FROM frota_manutencoes WHERE veiculo_id=? AND status IN ('Agendada','Em andamento')", (veiculo_id,)).fetchone()['total']
+    return render_page('Inativar veículo' if item['ativo'] else 'Reativar veículo',
+                       SITUACAO_HTML, v=item, em_uso=em_uso, pendentes=pendentes)
+
 
 @bp.post('/frota/veiculos/<int:veiculo_id>/manutencoes')
 @permissao('frota', 'gerenciar')
@@ -306,3 +347,4 @@ Encerramento: """ + observacao if observacao else '')
     return redirect(url_for('frota.veiculo', veiculo_id=item['veiculo_id']))
 FROTA_HTML = ler_template('veiculos/frota_html.html')
 VEICULO_HTML = ler_template('veiculos/veiculo_html.html')
+SITUACAO_HTML = ler_template('veiculos/situacao.html')

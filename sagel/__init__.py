@@ -8,6 +8,9 @@ from flask import Flask, request
 
 from . import base
 
+# ============================================================
+# INICIALIZAÇÃO — configurações, banco, módulos e respostas HTTP
+# ============================================================
 def create_app(config=None):
     root = Path(__file__).resolve().parent.parent
     app = Flask(__name__, static_folder=str(root / 'static'))

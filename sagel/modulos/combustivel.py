@@ -1,4 +1,11 @@
 """Rotas e regras da área: combustivel."""
+
+# ============================================================
+# COMBUSTÍVEL: ENTRADAS, ABASTECIMENTOS E SALDOS
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 from datetime import date
 from flask import abort, flash, redirect, request, url_for

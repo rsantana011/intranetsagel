@@ -1,4 +1,11 @@
 """Rotas e regras da área: login."""
+
+# ============================================================
+# LOGIN, SAÍDA, PERFIL E RECUPERAÇÃO DE ACESSO
+# Regras e rotas desta área. Interface: sagel/templates/.
+# Banco e segurança compartilhados: sagel/base.py.
+# Mapa completo de manutenção: ESTRUTURA-DO-PROJETO.md.
+# ============================================================
 from ..templates_loader import ler_template
 import hashlib
 import secrets
