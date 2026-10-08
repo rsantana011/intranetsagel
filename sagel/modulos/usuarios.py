@@ -45,9 +45,17 @@ def admin():
                     role = request.form.get('perfil', '')
                     if role not in PERFIS or role == 'admin':
                         raise ValueError('Selecione o perfil que será liberado para o colaborador.')
+                    mode = request.form.get('modo_acesso', 'individual')
+                    if mode not in ('individual', 'perfil'):
+                        raise ValueError('Selecione um modo de acesso válido.')
+                    if mode == 'individual':
+                        conn.execute('INSERT OR IGNORE INTO acessos_individuais(usuario_id) VALUES(?)', (pending['id'],))
+                    else:
+                        conn.execute('DELETE FROM permissoes_usuario WHERE usuario_id=?', (pending['id'],))
+                        conn.execute('DELETE FROM acessos_individuais WHERE usuario_id=?', (pending['id'],))
                     conn.execute('UPDATE usuarios SET perfil=?,perfil_solicitado=NULL,ativo=1,versao_sessao=versao_sessao+1 WHERE id=?', (role,pending['id']))
                     auditar('usuarios','Perfil aprovado',pending['id'],f"Solicitado: {pending['perfil_solicitado']}; liberado: {role}")
-                    flash('Cadastro aprovado. O colaborador já pode entrar com os acessos do perfil escolhido.', 'sucesso')
+                    flash('Cadastro aprovado. Confira as permissões individuais para liberar as áreas de trabalho.' if mode == 'individual' else 'Cadastro aprovado com as permissões do perfil escolhido.', 'sucesso')
                 else:
                     conn.execute('UPDATE usuarios SET perfil_solicitado=NULL,ativo=0,versao_sessao=versao_sessao+1 WHERE id=?', (pending['id'],))
                     auditar('usuarios','Cadastro recusado',pending['id'])
@@ -114,6 +122,56 @@ def admin():
     pending_users = conn.execute("SELECT id,nome,email,cargo,perfil_solicitado FROM usuarios WHERE ativo=0 AND perfil_solicitado IS NOT NULL AND perfil_solicitado!='' ORDER BY id").fetchall()
     return render_page('Usuários e perfis', ADMIN, selected=selected, users=users, recoveries=recoveries, reset_link=reset_link, pending_users=pending_users)
 ADMIN = ler_template('usuarios/admin.html')
+
+# ACESSOS INDIVIDUAIS — somente ADMIN pode substituir permissões do perfil.
+@bp.route('/admin/usuarios/<int:usuario_id>/acessos', methods=['GET', 'POST'])
+@permissao('usuarios', 'gerenciar')
+def acessos_usuario(usuario_id):
+    conn = db()
+    pessoa = conn.execute('SELECT * FROM usuarios WHERE id=?', (usuario_id,)).fetchone()
+    if not pessoa:
+        abort(404)
+    if pessoa['perfil'] == 'admin':
+        abort(400, description='Administradores possuem acesso completo.')
+    if request.method == 'POST':
+        mode = request.form.get('modo')
+        if mode not in ('individual', 'perfil'):
+            abort(400)
+        choices = set(request.form.getlist('permissao'))
+        allowed = {f'{module}:{action}' for module in MODULOS if module not in ('usuarios', 'dashboard')
+                   for action in ('ver', 'gerenciar', 'aprovar')
+                   if (action != 'aprovar' or module == 'compras')
+                   and (action != 'gerenciar' or module not in ('colaboradores', 'auditoria', 'relatorios'))}
+        if choices - allowed:
+            abort(400)
+        conn.execute('BEGIN IMMEDIATE')
+        # Confira novamente após adquirir o bloqueio de escrita.
+        pessoa = conn.execute('SELECT * FROM usuarios WHERE id=?', (usuario_id,)).fetchone()
+        if not pessoa or pessoa['perfil'] == 'admin':
+            conn.rollback()
+            abort(400)
+        conn.execute('DELETE FROM permissoes_usuario WHERE usuario_id=?', (usuario_id,))
+        if mode == 'individual':
+            conn.execute('INSERT OR IGNORE INTO acessos_individuais(usuario_id) VALUES(?)', (usuario_id,))
+            choices |= {choice.split(':')[0] + ':ver' for choice in choices}
+            for choice in sorted(choices):
+                module, action = choice.split(':')
+                conn.execute('INSERT INTO permissoes_usuario VALUES(?,?,?)', (usuario_id, module, action))
+        else:
+            conn.execute('DELETE FROM acessos_individuais WHERE usuario_id=?', (usuario_id,))
+        conn.execute('UPDATE usuarios SET versao_sessao=versao_sessao+1 WHERE id=?', (usuario_id,))
+        auditar('usuarios', 'Acessos individuais atualizados', usuario_id, f'Modo: {mode}; permissões: {",".join(sorted(choices))}')
+        conn.commit()
+        flash('Acessos atualizados. As sessões anteriores deste funcionário foram encerradas.', 'sucesso')
+        return redirect(url_for('principal.acessos_usuario', usuario_id=usuario_id))
+    individual = conn.execute('SELECT 1 FROM acessos_individuais WHERE usuario_id=?', (usuario_id,)).fetchone() is not None
+    if individual:
+        rows = conn.execute('SELECT modulo,acao FROM permissoes_usuario WHERE usuario_id=?', (usuario_id,))
+    else:
+        rows = conn.execute('SELECT modulo,acao FROM permissoes WHERE perfil=?', (pessoa['perfil'],))
+    selected = {r['modulo'] + ':' + r['acao'] for r in rows}
+    return render_page('Acessos do funcionário', ler_template('usuarios/acessos.html'),
+                       pessoa=pessoa, individual=individual, selected=selected)
 
 @bp.route('/permissoes', methods=['GET', 'POST'])
 @permissao('usuarios', 'gerenciar')

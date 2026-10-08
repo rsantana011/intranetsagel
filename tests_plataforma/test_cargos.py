@@ -69,6 +69,48 @@ class SenhaECargosTests(unittest.TestCase):
             session['usuario_id'] = ident
         return client
 
+    def test_default_approval_denies_business_modules_until_admin_grants(self):
+        user = self.confirm_registration('frota')
+        admin = self.login_as(1)
+        self.post('/admin', {'acao': 'aprovar_perfil', 'id': user['id'], 'perfil': 'frota'}, admin)
+        self.post('/', {'usuario': 'pessoa', 'senha': 'sagel@25'})
+        self.assertEqual(self.client.get('/dashboard').status_code, 200)
+        for path in ('/frota', '/combustivel', '/funcionarios', '/compras', '/documentos', '/admin'):
+            self.assertEqual(self.client.get(path).status_code, 403, path)
+        path = f"/admin/usuarios/{user['id']}/acessos"
+        self.assertEqual(self.post(path, {'modo': 'individual', 'permissao': ['frota:ver']}, admin).status_code, 302)
+        # A alteração revoga o token emitido anteriormente, inclusive fora do modo de testes.
+        self.app.config['TESTING'] = False
+        self.assertEqual(self.client.get('/frota').status_code, 302)
+        self.app.config['TESTING'] = True
+        self.post('/', {'usuario': 'pessoa', 'senha': 'sagel@25'})
+        self.assertEqual(self.client.get('/frota').status_code, 200)
+        self.assertEqual(self.post('/frota', {}).status_code, 403)
+        self.assertEqual(self.client.get('/funcionarios').status_code, 403)
+        self.assertEqual(self.client.get(path).status_code, 403)
+        self.assertEqual(self.post(path, {'modo':'perfil'}).status_code, 403)
+
+    def test_individual_grants_normalize_and_revoke_without_changing_peer(self):
+        admin = self.login_as(1)
+        path = '/admin/usuarios/2/acessos'
+        self.assertEqual(self.post(path, {'modo':'individual', 'permissao':['compras:aprovar']}, admin).status_code, 302)
+        self.assertIsNotNone(self.row("SELECT 1 FROM permissoes_usuario WHERE usuario_id=2 AND modulo='compras' AND acao='ver'"))
+        self.assertIsNone(self.row("SELECT 1 FROM permissoes_usuario WHERE usuario_id=2 AND modulo='ti_estoque'"))
+        peer = self.login_as(2)
+        self.assertEqual(peer.get('/ti/estoque').status_code, 403)
+        self.assertEqual(self.post(path, {'modo':'perfil'}, admin).status_code, 302)
+        self.assertEqual(peer.get('/ti/estoque').status_code, 200)
+        self.assertIsNone(self.row('SELECT 1 FROM acessos_individuais WHERE usuario_id=2'))
+
+    def test_individual_permission_form_rejects_forgery_and_protects_admin(self):
+        admin = self.login_as(1)
+        path = '/admin/usuarios/2/acessos'
+        self.assertEqual(admin.post(path, data={'modo':'individual'}).status_code, 400)
+        for choice in ('usuarios:gerenciar','frota:aprovar','inexistente:ver'):
+            self.assertEqual(self.post(path, {'modo':'individual','permissao':[choice]}, admin).status_code, 400)
+        self.assertEqual(self.post('/admin/usuarios/1/acessos', {'modo':'individual'}, admin).status_code, 400)
+        self.assertEqual(admin.get('/admin/usuarios/999999/acessos').status_code, 404)
+
     def start_registration(self, cargo='compras', user='pessoa', password='sagel@25'):
         response = self.post('/cadastro', {'email': user + '@example.test', 'usuario': user,
                                           'senha': password, 'cargo': cargo})
@@ -155,7 +197,7 @@ class SenhaECargosTests(unittest.TestCase):
 
     def test_only_admin_approves_and_grants_selected_profile(self):
         user = self.confirm_registration('frota')
-        data = {'acao': 'aprovar_perfil', 'id': str(user['id']), 'perfil': 'frota'}
+        data = {'acao': 'aprovar_perfil', 'id': str(user['id']), 'perfil': 'frota', 'modo_acesso': 'perfil'}
         manager = self.login_as(2)
         self.assertEqual(self.post('/admin', data, manager).status_code, 403)
         self.assertEqual(self.row('SELECT ativo FROM usuarios WHERE id=?', (user['id'],))[0], 0)

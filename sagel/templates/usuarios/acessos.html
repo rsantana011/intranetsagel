@@ -1,0 +1,13 @@
+<div class="box">
+<h2>Acessos de {{ pessoa.nome }}</h2>
+<p>Perfil: {{ perfil_nome(pessoa.perfil) }} · Conta {{ 'ativa' if pessoa.ativo else 'inativa' }}.</p>
+<p>As permissões individuais substituem as permissões do perfil. A página inicial e o próprio perfil continuam disponíveis; as áreas não marcadas ficam bloqueadas, inclusive por endereço direto. Uma conta inativa continua sem poder entrar.</p>
+<form method="post">{{ csrf_field() }}
+<label>Modo de acesso<select name="modo"><option value="individual" {{ 'selected' if individual }}>Escolher acessos deste funcionário</option><option value="perfil" {{ 'selected' if not individual }}>Usar permissões do perfil</option></select></label>
+<p class="muted">As marcações abaixo só são aplicadas ao escolher acessos individuais. Gerenciar ou aprovar inclui a permissão de consultar. Restrições de propriedade dos registros e documentos continuam valendo.</p>
+<div class="table-wrap"><table><thead><tr><th>Área</th><th>Consultar</th><th>Gerenciar</th><th>Aprovar compras</th></tr></thead><tbody>
+{% for slug,info in modulos.items() if slug not in ('usuarios','dashboard') %}<tr><td>{{ info[0] }}</td>
+{% for acao in ('ver','gerenciar','aprovar') %}<td>{% if (acao!='aprovar' or slug=='compras') and (acao!='gerenciar' or slug not in ('colaboradores','auditoria','relatorios')) %}<input type="checkbox" name="permissao" value="{{ slug }}:{{ acao }}" aria-label="{{ info[0] }} {{ acao }}" {{ 'checked' if slug+':'+acao in selected }}>{% endif %}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>
+<div class="acoes"><button>Salvar acessos</button><a class="button secondary" href="/admin">Voltar</a></div>
+</form></div>

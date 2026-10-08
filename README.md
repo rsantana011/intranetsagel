@@ -97,3 +97,13 @@ Consulte [o mapa do código](ESTRUTURA-DO-PROJETO.md) para localizar banco de da
 A interface inclui navegação de retorno ao início, atalho para pular ao conteúdo, foco visível pelo teclado e respeito à preferência por movimento reduzido. Formulários apresentam indicação de envio, bloqueiam cliques repetidos por até 15 segundos e verificam o limite total de anexos de 16 MB no navegador. As validações do servidor permanecem obrigatórias; o bloqueio no navegador não substitui idempotência no servidor.
 
 Na Frota, a ação Inativar/Reativar tem uma página de confirmação com identificação do veículo, explicação do efeito e aviso de manutenções pendentes. O histórico é preservado, veículos em uso não podem ser inativados e mudanças concorrentes de situação são recusadas.
+
+## Autorizações individuais
+
+Em **Administração → Usuários e perfis → Acessos**, o administrador escolhe entre herdar as permissões do perfil ou definir uma lista individual. No modo individual, áreas não marcadas são bloqueadas no menu e nas rotas; a página inicial e o próprio perfil permanecem disponíveis. Permissões de gerenciamento e aprovação incluem consulta, sem eliminar as restrições de propriedade dos registros e documentos.
+
+Novas aprovações usam, por padrão, o modo individual. O administrador também pode escolher explicitamente a herança do perfil. Cadastrar-se e escolher um cargo não libera acesso: a conta continua inativa até a aprovação. Contas existentes mantêm suas permissões de perfil até a alteração pelo administrador. Mudanças nos acessos individuais revogam as sessões anteriores e são auditadas.
+
+A inicialização cria duas tabelas adicionais de permissões sem apagar registros. A lista de colaboradores passa a ter uma permissão própria; a migração preserva o acesso anterior dos perfis existentes.
+
+Validação desta atualização: 97 testes aprovados, incluindo integração com uma instância PostgreSQL temporária e isolada. Isso não substitui homologação do ambiente de produção, testes de carga ou revisão independente de segurança.

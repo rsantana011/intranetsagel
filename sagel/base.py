@@ -27,6 +27,7 @@ PERFIS = {'admin': 'Administrador', 'frota': 'Gestor de Frota',
           'almoxarifado': 'Almoxarifado', 'compras': 'Compras', 'ti': 'TI',
           'documentacao': 'Documentação', 'colaborador': 'Colaborador'}
 MODULOS = {
+    'colaboradores': ('Colaboradores', '/funcionarios'),
     'dashboard': ('Página inicial', '/dashboard'), 'frota': ('Frota', '/frota'),
     'combustivel': ('Combustível', '/combustivel'), 'epi': ('Estoque EPI', '/epi'),
     'chamados': ('Chamados TI', '/chamados'), 'ti_estoque': ('Estoque TI', '/ti/estoque'),
@@ -134,6 +135,13 @@ def tem_permissao(modulo, acao='ver'):
         return True
     if modulo == 'usuarios':
         return False
+    # ACESSO INDIVIDUAL — uma lista explícita substitui as permissões do perfil.
+    # A página inicial apenas reúne módulos autorizados e permanece acessível.
+    if db().execute('SELECT 1 FROM acessos_individuais WHERE usuario_id=?', (user['id'],)).fetchone():
+        if modulo == 'dashboard' and acao == 'ver':
+            return True
+        return db().execute('SELECT 1 FROM permissoes_usuario WHERE usuario_id=? AND modulo=? AND acao=?',
+                            (user['id'], modulo, acao)).fetchone() is not None
     return db().execute('SELECT 1 FROM permissoes WHERE perfil=? AND modulo=? AND acao=?',
                         (user['perfil'], modulo, acao)).fetchone() is not None
 
@@ -287,6 +295,8 @@ def init_schema(conn):
     CREATE TABLE IF NOT EXISTS tarefas(id INTEGER PRIMARY KEY AUTOINCREMENT,titulo TEXT NOT NULL,descricao TEXT,responsavel TEXT,status TEXT DEFAULT 'Pendente',data TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS documentos(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT NOT NULL,categoria TEXT,link TEXT);
     CREATE TABLE IF NOT EXISTS permissoes(perfil TEXT NOT NULL,modulo TEXT NOT NULL,acao TEXT NOT NULL,PRIMARY KEY(perfil,modulo,acao));
+    CREATE TABLE IF NOT EXISTS acessos_individuais(usuario_id INTEGER PRIMARY KEY REFERENCES usuarios(id));
+    CREATE TABLE IF NOT EXISTS permissoes_usuario(usuario_id INTEGER NOT NULL REFERENCES usuarios(id),modulo TEXT NOT NULL,acao TEXT NOT NULL,PRIMARY KEY(usuario_id,modulo,acao));
     CREATE TABLE IF NOT EXISTS configuracoes(chave TEXT PRIMARY KEY,valor TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS auditoria(id INTEGER PRIMARY KEY AUTOINCREMENT,usuario_id INTEGER REFERENCES usuarios(id),modulo TEXT NOT NULL,acao TEXT NOT NULL,registro_id TEXT,detalhes TEXT,data TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS recuperacoes(id INTEGER PRIMARY KEY AUTOINCREMENT,usuario_id INTEGER REFERENCES usuarios(id),criado_em TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'Pendente',token_hash TEXT,expira_em TEXT);
@@ -317,5 +327,12 @@ def init_schema(conn):
                 conn.execute("INSERT OR IGNORE INTO permissoes VALUES('compras','compras','aprovar')")
         conn.execute("INSERT INTO configuracoes VALUES('permissoes_iniciais','1')")
     conn.execute("INSERT OR IGNORE INTO configuracoes VALUES('cadastro_aberto','1')")
+    # Preserva o acesso anterior dos perfis existentes à lista de colaboradores.
+    # Novos acessos individuais não herdam esta autorização.
+    if not conn.execute("SELECT 1 FROM configuracoes WHERE chave='permissao_colaboradores_v1'").fetchone():
+        for role in PERFIS:
+            if role != 'admin':
+                conn.execute("INSERT OR IGNORE INTO permissoes VALUES(?,'colaboradores','ver')", (role,))
+        conn.execute("INSERT INTO configuracoes VALUES('permissao_colaboradores_v1','1')")
     conn.execute("INSERT OR IGNORE INTO configuracoes VALUES('backup_automatico','1')")
     conn.execute('CREATE INDEX IF NOT EXISTS idx_auditoria_data ON auditoria(data)')
