@@ -1,0 +1,2 @@
+{% if tem_permissao('avisos','gerenciar') %}<div class="box"><h2>Publicar aviso</h2><form method="post">{{csrf_field()}}<label>Título<input name="titulo" maxlength="200" required></label><label>Mensagem<textarea name="mensagem" maxlength="10000" required></textarea></label><button>Publicar</button></form></div>{% endif %}
+    <div class="box">{% for a in notices %}<article class="aviso"><h2>{{a.titulo}}</h2><p class="preserve">{{a.mensagem}}</p><small>{{a.autor}} · {{a.data}}</small></article>{% else %}<p>Nenhum aviso publicado.</p>{% endfor %}</div>

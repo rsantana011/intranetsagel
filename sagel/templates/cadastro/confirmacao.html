@@ -1,0 +1,5 @@
+<p class="login-descricao">Enviamos um código para <strong>{{email}}</strong>. Confira também a pasta de spam.</p>
+<form method="post">{{csrf_field()}}<label for="codigo">Código de confirmação</label><input id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required autofocus>
+<small class="campo-ajuda">O código tem 6 números e vale por 10 minutos.</small><button>Confirmar e criar conta</button></form>
+<form method="post">{{csrf_field()}}<input type="hidden" name="acao" value="reenviar"><button class="secondary">Reenviar código</button></form>
+<p class="login-alternativa"><a href="/cadastro">Corrigir meus dados</a></p>

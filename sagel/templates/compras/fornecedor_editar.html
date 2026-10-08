@@ -1,0 +1,4 @@
+
+        <a class="button secondary" href="{{ url_for('compras_documentos.fornecedores') }}">Voltar aos fornecedores</a>
+        <div class="box"><form method="post">{{ csrf_field() }}<div class="grid-form"><label>Nome<input name="nome" value="{{ request.form.get('nome',f.nome) }}" required maxlength="200"></label><label>CNPJ / CPF<input name="documento" value="{{ request.form.get('documento',f.documento) }}" maxlength="30"></label><label>Contato<input name="contato" value="{{ request.form.get('contato',f.contato) }}" maxlength="200"></label><label>E-mail<input name="email" type="email" value="{{ request.form.get('email',f.email) }}" maxlength="254"></label></div><button>Salvar fornecedor</button></form></div>
+        

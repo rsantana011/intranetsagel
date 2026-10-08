@@ -1,0 +1,4 @@
+
+        <div class="acoes"><a class="button secondary" href="{{ url_for('compras_documentos.compra_detalhe',sid=s.id) }}">Voltar</a><button type="button" data-print>Imprimir pedido</button></div>
+        <div class="box"><h2>SAGEL · Pedido de compra #{{ p.id }}</h2><p>Solicitação #{{ s.id }} · Emitido em {{ p.criado_em }} · {{ p.status }}</p><p><strong>Fornecedor:</strong> {{ p.fornecedor_nome }}</p><p>Setor: {{ s.setor }} · Centro de custo: {{ s.centro_custo }}</p><table><thead><tr><th>Item</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>{% for i in items %}<tr><td>{{ i.descricao }}</td><td>{{ '%g'|format(i.quantidade) }} {{ i.unidade }}</td><td>{{ brl(i.preco_centavos) }}</td><td>{{ brl(i.total_centavos) }}</td></tr>{% endfor %}</tbody></table><h3>Total: {{ brl(p.total_centavos) }}</h3><p>Entrega prevista: {{ p.prazo }}</p><p>Condições: {{ p.condicoes }}</p><p class="muted">Registro interno de compra.</p></div>
+        

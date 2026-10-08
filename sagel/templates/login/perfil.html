@@ -1,0 +1,3 @@
+<div class="box"><p>{{user.usuario}} · {{perfil_nome(user.perfil)}} · {{user.setor or 'Setor não informado'}}</p>
+    <form method="post">{{csrf_field()}}<div class="grid-form"><label>Nome<input name="nome" value="{{user.nome}}" maxlength="120" required></label><label>E-mail<input name="email" type="email" value="{{user.email or ''}}" required></label>
+    <label>Senha atual<input name="senha_atual" type="password" autocomplete="current-password" required></label><label>Nova senha (opcional)<input name="nova_senha" type="password"   autocomplete="new-password"><small>8 caracteres, com número e caractere especial.</small></label></div><button>Salvar perfil</button></form></div>

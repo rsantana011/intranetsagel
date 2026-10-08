@@ -1,0 +1,21 @@
+<div class="acoes"><a class="button secondary" href="/permissoes">Permissões por perfil</a><a class="button secondary" href="/configuracoes">Configurações</a><a class="button secondary" href="/auditoria">Auditoria</a></div>
+{% if current_user().perfil=='admin' %}
+<section class="box"><h2>Cadastros aguardando aprovação</h2>
+<p class="muted">Estes colaboradores confirmaram o e-mail e aguardam a liberação do perfil para entrar.</p>
+{% for u in pending_users %}
+<article class="aviso"><h3>{{u.nome}}</h3><p>{{u.email}} · Cargo informado: {{u.cargo}}</p>
+<form method="post">{{csrf_field()}}<input type="hidden" name="id" value="{{u.id}}">
+<label>Perfil que será liberado<select name="perfil">{% for key,label in perfis.items() %}{% if key!='admin' %}<option value="{{key}}" {{'selected' if key==u.perfil_solicitado}}>{{label}}</option>{% endif %}{% endfor %}</select></label>
+<div class="acoes"><button name="acao" value="aprovar_perfil">Aprovar acesso</button><button class="secondary" name="acao" value="recusar_perfil">Recusar cadastro</button></div></form></article>
+{% else %}<p>Nenhum cadastro aguardando aprovação.</p>{% endfor %}</section>
+{% endif %}
+{% if reset_link %}<div class="box"><h2>Link de recuperação</h2><p>Copie o link agora; ele não será exibido novamente.</p><input readonly value="{{reset_link}}" aria-label="Link de recuperação"></div>{% endif %}
+<div class="box"><h2>{{'Editar usuário' if selected else 'Cadastrar usuário'}}</h2><form method="post">{{csrf_field()}}<input type="hidden" name="id" value="{{selected.id if selected else ''}}"><div class="grid-form">
+<label>Nome<input name="nome" value="{{selected.nome if selected else ''}}" required maxlength="120"></label><label>Usuário<input name="usuario" value="{{selected.usuario if selected else ''}}" required maxlength="50"></label>
+<label>E-mail<input name="email" type="email" value="{{selected.email or '' if selected else ''}}" required maxlength="254"></label><label>Cargo<input name="cargo" value="{{selected.cargo if selected else 'Colaborador'}}" required maxlength="100"></label>
+<label>Setor<input name="setor" value="{{selected.setor if selected else ''}}" maxlength="100"></label><label>Perfil<select name="perfil">{% for key,label in perfis.items() %}<option value="{{key}}" {{'selected' if (selected and selected.perfil==key) or (not selected and key=='colaborador')}}>{{label}}</option>{% endfor %}</select></label>
+<label>{{'Nova senha (opcional)' if selected else 'Senha'}}<input name="senha" type="password" autocomplete="new-password"   {{'required' if not selected}}><small>8 caracteres, com número e caractere especial.</small></label>
+<label class="check"><input type="checkbox" name="ativo" value="1" {{'checked' if not selected or selected.ativo}}> Conta ativa</label></div><div class="acoes"><button>Salvar usuário</button>{% if selected %}<a href="/admin">Cancelar edição</a>{% endif %}</div></form></div>
+<div class="box"><h2>Usuários cadastrados</h2><table><thead><tr><th>Nome</th><th>Usuário</th><th>Setor</th><th>Perfil</th><th>Situação</th><th></th></tr></thead><tbody>{% for u in users %}<tr><td>{{u.nome}}</td><td>{{u.usuario}}</td><td>{{u.setor}}</td><td>{{perfil_nome(u.perfil)}}</td><td>{{'Ativo' if u.ativo else 'Inativo'}}</td><td><a href="/admin?editar={{u.id}}">Editar</a></td></tr>{% endfor %}</tbody></table></div>
+<div class="box"><h2>Recuperação de acesso</h2><table><thead><tr><th>Colaborador</th><th>E-mail</th><th>Data</th><th>Status</th><th>Ação</th></tr></thead><tbody>{% for r in recoveries %}<tr><td>{{r.nome}}</td><td>{{r.email}}</td><td>{{r.criado_em}}</td><td>{{r.status}}</td><td><form method="post">{{csrf_field()}}<input type="hidden" name="acao" value="recuperar"><input type="hidden" name="id" value="{{r.id}}"><button>Gerar link</button></form></td></tr>{% else %}<tr><td colspan="5">Nenhuma solicitação.</td></tr>{% endfor %}</tbody></table></div>
+

@@ -1,0 +1,13 @@
+
+<div class="box"><p>Controle de lotes, entregas por colaborador e reposição de equipamentos de proteção.</p>
+<form method="get" class="acoes"><input name="q" value="{{ busca }}" placeholder="Pesquisar EPI, CA ou lote" aria-label="Pesquisar EPI"><button>Pesquisar</button></form></div>
+{% if tem_permissao('epi','gerenciar') %}<details class="box"><summary>Cadastrar EPI</summary>
+<form method="post">{{ csrf_field() }}<div class="grid-form">
+<label class="campo">Nome<input name="nome" maxlength="150" required></label><label class="campo">Certificado de aprovação (CA)<input name="ca" maxlength="40"></label>
+<label class="campo">Tamanho<input name="tamanho" maxlength="40"></label><label class="campo">Lote<input name="lote" maxlength="60"></label>
+<label class="campo">Validade do lote<input type="date" name="validade"></label><label class="campo">Unidade<input name="unidade" value="un" maxlength="20" required></label>
+<label class="campo">Estoque mínimo<input type="number" name="estoque_minimo" value="0" min="0" step="1" required></label></div><button>Cadastrar EPI</button></form></details>{% endif %}
+<div class="box"><table><thead><tr><th>EPI / CA</th><th>Tamanho / lote</th><th>Saldo</th><th>Validade</th><th>Situação</th><th></th></tr></thead><tbody>
+{% for i in itens %}<tr><td>{{ i.nome }}<br><small>{{ i.ca or 'CA não informado' }}</small></td><td>{{ i.tamanho or '—' }} / {{ i.lote or '—' }}</td>
+<td>{{ i.saldo }} {{ i.unidade }}{% if i.saldo<=i.estoque_minimo %}<br><strong>Reposição necessária</strong>{% endif %}</td><td>{{ i.validade or 'Não informada' }}{% if i.validade and i.validade<data_hoje %}<br><strong>Vencido</strong>{% endif %}</td>
+<td>{{ 'Ativo' if i.ativo else 'Inativo' }}</td><td><a href="{{ url_for('estoques_ti.epi_item',item_id=i.id) }}">Abrir</a></td></tr>{% else %}<tr><td colspan="6">Nenhum EPI encontrado.</td></tr>{% endfor %}</tbody></table></div>

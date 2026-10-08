@@ -1,0 +1,17 @@
+
+<div class="box"><form method="get" class="grid-form">
+ <div class="campo"><label for="busca">Placa ou modelo</label><input id="busca" name="q" value="{{ busca }}" placeholder="Pesquisar veículos"></div>
+ <div class="campo"><label for="situacao">Situação</label><select id="situacao" name="situacao"><option value="ativos" {% if situacao=='ativos' %}selected{% endif %}>Ativos</option><option value="inativos" {% if situacao=='inativos' %}selected{% endif %}>Inativos</option><option value="todos" {% if situacao=='todos' %}selected{% endif %}>Todos</option></select></div>
+ <div class="acoes"><button>Pesquisar</button><a class="button secondary" href="{{ url_for('frota.index') }}">Limpar</a></div>
+</form></div>
+{% if vencidos %}<div class="box"><h2>Documentos para renovar</h2><p class="muted">Documentos vencidos ou com validade nos próximos 30 dias.</p><div class="table-wrap"><table><thead><tr><th>Veículo</th><th>Documento</th><th>Validade</th><th>Situação</th></tr></thead><tbody>{% for d in vencidos %}<tr><td><a href="{{ url_for('frota.veiculo',veiculo_id=d.veiculo_id) }}">{{ d.placa }}</a></td><td>{{ d.titulo }}</td><td>{{ d.validade }}</td><td>{{ 'Vencido' if d.validade<datahoje else 'A renovar' }}</td></tr>{% endfor %}</tbody></table></div></div>{% endif %}
+<div class="box"><h2>Veículos</h2><div class="table-wrap"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>Combustível</th><th>Quilometragem</th><th>Situação</th><th>Manutenções pendentes</th></tr></thead><tbody>
+{% for v in veiculos %}<tr><td><a href="{{ url_for('frota.veiculo',veiculo_id=v.id) }}">{{ v.placa }}</a></td><td>{{ v.modelo }}</td><td>{{ v.ano }}</td><td>{{ v.tipo_combustivel }}</td><td>{{ v.quilometragem }} km</td><td><span class="badge">{{ 'Inativo' if not v.ativo else ('Em uso' if v.em_uso else 'Ativo') }}</span></td><td>{{ v.pendentes }}</td></tr>{% else %}<tr><td colspan="7">Nenhum veículo encontrado.</td></tr>{% endfor %}</tbody></table></div></div>
+{% if tem_permissao('frota','gerenciar') %}<div class="box"><h2>Cadastrar veículo</h2><form method="post" class="grid-form">{{ csrf_field() }}
+<div class="campo"><label for="placa">Placa</label><input id="placa" name="placa" maxlength="10" placeholder="ABC1D23" required></div>
+<div class="campo"><label for="modelo">Modelo</label><input id="modelo" name="modelo" maxlength="120" required></div>
+<div class="campo"><label for="ano">Ano</label><input id="ano" name="ano" type="number" min="1900" max="{{ anoatual+1 }}" value="{{ anoatual }}" required></div>
+<div class="campo"><label for="combustivel">Combustível</label><select id="combustivel" name="tipo_combustivel">{% for tipo in tipos %}<option>{{ tipo }}</option>{% endfor %}</select></div>
+<div class="campo"><label for="km">Quilometragem atual</label><input id="km" name="quilometragem" type="number" min="0" value="0" required></div>
+<div class="campo"><label for="observacoes">Observações</label><textarea id="observacoes" name="observacoes" maxlength="2000"></textarea></div><div class="acoes"><button>Cadastrar veículo</button></div>
+</form></div>{% endif %}

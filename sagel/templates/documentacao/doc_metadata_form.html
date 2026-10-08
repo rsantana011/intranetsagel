@@ -1,0 +1,12 @@
+
+<div class="grid-form"><label>Nome do documento<input name="nome" maxlength="200" required value="{{ d.nome if d else request.form.get('nome','') }}"></label>
+<label>Categoria<input name="categoria" list="categorias" maxlength="100" required value="{{ d.categoria if d else request.form.get('categoria','') }}"><datalist id="categorias">{% for c in categorias %}<option value="{{ c }}">{% endfor %}</datalist></label>
+<label>Responsável<select name="responsavel_id" required>{% for u in usuarios %}<option value="{{ u.id }}" {{ 'selected' if (d and d.responsavel_id==u.id) or (not d and current_user().id==u.id) }}>{{ u.nome }}</option>{% endfor %}</select></label>
+<label>Validade (opcional)<input type="date" name="validade" value="{{ d.validade or '' if d else request.form.get('validade','') }}"></label></div>
+<label>Descrição<textarea name="descricao" maxlength="4000">{{ d.descricao if d else request.form.get('descricao','') }}</textarea></label>
+<label>Palavras-chave<input name="palavras_chave" maxlength="500" value="{{ d.palavras_chave if d else request.form.get('palavras_chave','') }}" placeholder="Separe termos por vírgula"></label>
+<fieldset><legend>Controle de acesso</legend><label>Quem pode consultar<select name="visibilidade"><option value="restrito" {{ 'selected' if not d or d.visibilidade=='restrito' }}>Somente perfis, setores ou pessoas selecionadas</option><option value="todos" {{ 'selected' if d and d.visibilidade=='todos' }}>Todos com acesso ao módulo Documentação</option></select></label>
+<p class="muted">No acesso restrito, basta pertencer a um dos perfis, setores ou usuários selecionados. Administradores e gestores de Documentação têm acesso para gerenciar. Sem seleção, somente esses gestores acessam.</p>
+<div class="grid-form"><label>Perfis autorizados<select name="perfis" multiple size="5">{% for p in perfis %}<option value="{{ p }}" {{ 'selected' if p in acl_perfis }}>{{ perfil_nome(p) }}</option>{% endfor %}</select></label>
+<label>Pessoas autorizadas<select name="usuarios" multiple size="5">{% for u in usuarios %}<option value="{{ u.id }}" {{ 'selected' if u.id in acl_usuarios }}>{{ u.nome }}{{ ' · '+u.setor if u.setor else '' }}</option>{% endfor %}</select></label></div>
+<label>Setores autorizados<input name="setores" value="{{ acl_setores }}" placeholder="Financeiro, RH, Diretoria"></label><p class="muted">Use o mesmo nome do setor cadastrado no perfil das pessoas. Nos campos de seleção, segure Ctrl para escolher mais de uma opção.</p></fieldset>

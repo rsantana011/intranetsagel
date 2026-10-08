@@ -1,0 +1,2 @@
+<button>Salvar informações e acessos</button></form></details>
+<details class="box"><summary>{{ 'Restaurar documento' if d.arquivado else 'Arquivar documento' }}</summary><p>O histórico e os arquivos permanecem guardados. Documentos arquivados ficam disponíveis somente aos gestores.</p><form method="post">{{ csrf_field() }}<input type="hidden" name="acao" value="arquivar"><button class="secondary">{{ 'Restaurar' if d.arquivado else 'Arquivar' }}</button></form></details>

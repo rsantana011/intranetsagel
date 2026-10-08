@@ -1,0 +1,12 @@
+<p class="login-descricao">Informe seus dados e seu cargo. Após confirmar o e-mail, o administrador aprovará seu acesso.</p>
+{% if not envio_configurado %}<p class="mensagem mensagem-erro"><strong>Envio de e-mail ainda indisponível.</strong> Mesmo com uma senha válida, o cadastro só poderá avançar quando o TI configurar o remetente dos códigos.</p>{% endif %}
+<form method="post">{{csrf_field()}}
+<label for="email">E-mail</label><input id="email" name="email" type="email" maxlength="254" value="{{request.form.get('email','')}}" autocomplete="email" required>
+<label for="usuario">Nome de usuário</label><input id="usuario" name="usuario" maxlength="50" value="{{request.form.get('usuario','')}}" autocomplete="username" required>
+<label for="cargo">Cargo ou área na empresa</label>
+<select id="cargo" name="cargo" required><option value="">Selecione seu cargo</option>{% for key,label in cargos.items() %}<option value="{{key}}" {{'selected' if request.form.get('cargo')==key}}>{{label}}</option>{% endfor %}</select>
+<small class="campo-ajuda">O administrador conferirá seu cargo e definirá os acessos do seu perfil.</small>
+<label for="senha">Senha</label><input id="senha" name="senha" type="password" autocomplete="new-password" required aria-describedby="regra-senha">
+<small id="regra-senha" class="campo-ajuda">8 caracteres, pelo menos um número e um caractere especial, como !, @ ou #. Letras maiúsculas não são obrigatórias.</small>
+<button>Enviar código de confirmação</button></form><p class="login-alternativa"><a href="/">Já tenho uma conta</a></p>
+

@@ -1,0 +1,16 @@
+
+<p><a href="{{ url_for('estoques_ti.epi') }}">Voltar ao estoque de EPI</a></p>
+<div class="cards"><div class="card"><h3>Saldo</h3><p>{{ item.saldo }} {{ item.unidade }}</p></div><div class="card"><h3>Estoque mínimo</h3><p>{{ item.estoque_minimo }} {{ item.unidade }}</p></div><div class="card"><h3>CA / validade</h3><p>{{ item.ca or 'Não informado' }} · {{ item.validade or 'Sem validade informada' }}</p></div></div>
+{% if item.validade and item.validade<data_hoje %}<p class="mensagem">Lote vencido. Entregas estão bloqueadas.</p>{% endif %}
+{% if tem_permissao('epi','gerenciar') %}<div class="box"><h2>Registrar movimentação</h2><form method="post">{{ csrf_field() }}<input type="hidden" name="acao" value="movimentar"><div class="grid-form">
+<label class="campo">Movimentação<select name="tipo"><option>Entrada</option><option>Saída</option></select></label><label class="campo">Quantidade<input type="number" name="quantidade" min="1" step="1" required></label>
+<label class="campo">Colaborador (obrigatório na saída)<select name="colaborador_id"><option value="">Selecione</option>{% for u in usuarios %}<option value="{{ u.id }}">{{ u.nome }} · {{ u.setor or 'Sem setor' }}</option>{% endfor %}</select></label>
+<label class="campo">Origem / motivo<textarea name="observacao" maxlength="1000" required></textarea></label></div><button>Registrar movimentação</button></form></div>
+<details class="box"><summary>Editar cadastro</summary><p class="muted">Após a primeira movimentação, CA, tamanho, lote, validade e unidade ficam preservados. Cadastre outro item para um novo lote.</p><form method="post">{{ csrf_field() }}<input type="hidden" name="acao" value="editar"><div class="grid-form">
+<label class="campo">Nome<input name="nome" value="{{ item.nome }}" maxlength="150" required></label><label class="campo">CA<input name="ca" value="{{ item.ca }}" maxlength="40"></label>
+<label class="campo">Tamanho<input name="tamanho" value="{{ item.tamanho }}" maxlength="40"></label><label class="campo">Lote<input name="lote" value="{{ item.lote }}" maxlength="60"></label>
+<label class="campo">Validade<input type="date" name="validade" value="{{ item.validade or '' }}"></label><label class="campo">Unidade<input name="unidade" value="{{ item.unidade }}" maxlength="20" required></label>
+<label class="campo">Estoque mínimo<input type="number" name="estoque_minimo" value="{{ item.estoque_minimo }}" min="0" required></label>
+<label class="campo">Situação<select name="ativo"><option value="1" {{ 'selected' if item.ativo else '' }}>Ativo</option><option value="0" {{ 'selected' if not item.ativo else '' }}>Inativo</option></select></label></div><button>Salvar cadastro</button></form></details>{% endif %}
+<div class="box"><h2>Histórico de entradas e entregas</h2><table><thead><tr><th>Data</th><th>Movimento / lote</th><th>Quantidade</th><th>Colaborador</th><th>Origem / motivo</th><th>Registrado por</th></tr></thead><tbody>
+{% for m in movimentos %}<tr><td>{{ m.criado_em }}</td><td>{{ m.tipo }}<br><small>Lote: {{ m.lote_epi or '—' }} · CA: {{ m.ca_epi or '—' }}</small></td><td>{{ m.quantidade }} {{ m.unidade_epi }}</td><td>{{ m.colaborador or '—' }}</td><td>{{ m.observacao }}</td><td>{{ m.autor }}</td></tr>{% else %}<tr><td colspan="6">Nenhuma movimentação registrada.</td></tr>{% endfor %}</tbody></table></div>

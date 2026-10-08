@@ -1,0 +1,1 @@
+<div class="box"><table><thead><tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>E-mail</th></tr></thead><tbody>{% for u in users %}<tr><td>{{u.nome}}</td><td>{{u.cargo}}</td><td>{{u.setor}}</td><td>{{u.email or '—'}}</td></tr>{% endfor %}</tbody></table></div>
